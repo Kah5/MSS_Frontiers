@@ -1,0 +1,150 @@
+---
+title: "Protected Areas of the Midwest"
+author: "Kelly Heilman"
+date: "4/9/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sp)
+library(rgdal)
+library(sf)
+library(foreign)
+library(ggplot2)
+library(tidyverse)
+```
+## *The Data*
+
+Protected Areas Databas of the United States: PAD-US version 2.0
+
+https://www.usgs.gov/core-science-systems/science-analytics-and-synthesis/gap/science/pad-us-data-download?qt-science_center_objects=0#qt-science_center_objects
+
+Luckily, our uppermidwest region is encompassed in the Great Lakes Shapefile. 
+
+```{r, echo=FALSE}
+workingdir <- "/Users/kah/Documents/MSS_Frontiers/"
+protected.areas <-readOGR(paste0(workingdir, "data/PADUS2_0_DOIRegion3_Shapefile/PADUS2_0Fee_DOIRegion3.shp"))
+
+PA.data <- protected.areas@data
+
+map <- ggplot() + geom_polygon(data = protected.areas, aes(x = long, y = lat, group = group), colour = NA, fill = "black")+ theme_bw()+theme(axis.title = element_blank(), panel.grid = element_blank())
+
+map
+# map.feetype <- map + geom_sf(data = protected.areas, aes( fill = d_Own_Type), colour = "NA")+theme_bw()+theme(axis.title = element_blank(), panel.grid = element_blank())
+# map.feetype
+```
+
+**Ownership type of the Protected Areas in the Midwest**
+Who owns most of the protected areas in the midwest? 
+The States own most of the Protected areas (State DNRs), followed closely by Federal Management (US Forest Service (USFS), and Fish and Wildlife Services (FWS)), then local county level ownership. 
+
+
+```{r  echo=FALSE}
+PA.by.own <- PA.data %>% select(Own_Type, GIS_Acres, d_IUCN_Cat) %>% 
+  group_by( Own_Type,  d_IUCN_Cat) %>% 
+  summarise(n=n(), 
+          acres = sum(as.numeric(as.character(GIS_Acres)), na.rm=TRUE))
+
+Own.table <- data.frame(Own_Type = c("DESG", "DIST", "FED", "JNT", "LOC", "NGO","PVT", "STAT", "TERR", "TRIB", "UNK"),
+                        Ownership = c("Designation","Regional Agency Special District","Federal","Joint","Local Government","Non-Governmental Organization","Private","State","Territorial","American Indian Lands","Unknown"
+))
+
+PA.by.own <- merge(PA.by.own, Own.table, by = "Own_Type")
+
+ggplot(PA.by.own, aes(x = Ownership, acres))+
+  geom_bar(stat = "identity", position = "dodge")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom", panel.grid = element_blank())+ xlab("Ownership")+ylab("Acres")
+
+```
+
+## *Summaries by the Management IUCN categories*
+
+International Union for the Conservation of Nature (IUCN) management categories assigned to protected areas for inclusion in the United Nations Environment World Conservation Monitoring Center (WCMC) World Database for Protected Areas (WDPA) and the Commission for Environmental Cooperation (CEC) North American Terrestrial Protected Areas Database.  IUCN defines a protected area as, "A clearly defined geographical space, recognized, dedicated and managed, through legal or other effective means, to achieve the long-term conservation of nature with associated ecosystem services and cultural values" (includes GAP Status Code 1 and 2 only).  Categorization follows as:
+
+  'IUCN Category Ia': Strict Nature Reserves are strictly protected areas set aside to protect biodiversity and possibly geological or geomorphological features, where human visitation, use and impacts are strictly controlled and limited to ensure preservation of the conservation values.  Such protected areas can serve as indispensable reference areas for scientific research and monitoring.
+
+'IUCN Category Ib': Wilderness Areas are protected areas are usually large unmodified or slightly modified areas, retaining their natural character and influence, without permanent or significant human habitation, which are protected and managed to preserve their natural condition.
+
+'IUCN Category II': National Park protected areas are large natural or near natural areas set aside to protect large-scale ecological processes, along with the complement of species and ecosystems characteristic of the area, which also provide a foundation for environmentally and culturally compatible spiritual, scientific, educational, recreational and visitor opportunities.
+
+'IUCN Category III': Natural Monument or Feature protected areas are set aside to protect a specific natural monument, which can be a landform, sea mount, submarine caverns, geological feature such as caves, or even a living feature such as an ancient grove.  They are generally quite small protected areas and often have high visitor value.
+
+'IUCN Category IV': Habitat and (or) species management protected areas aim to protect particular species or habitats and management reflects this priority.  Many category IV protected areas will need regular, active interventions to address the requirements of particular species or to maintain habitats, but this is not a requirement of this category.
+
+'IUCN Category V': Protected landscape and (or) seascape protected areas occur where the interaction of people and nature over time has produced an area of distinct character with significant ecological, biological, cultural, and scenic value.
+
+'IUCN Category VI': Protected area with sustainable use (community based, non-industrial) of natural resources are generally large, with much of the area in a more-or-less natural condition and whereas a proportion is under sustainable natural resource management and where such exploitation is seen as one of the main aims of the area.
+
+'Other Conservation Areas' are not recognized by IUCN at this time; however, they are included in the CEC's database referenced above.  These areas (includes GAP Status Code 3 areas only) are attributed in the 'IUCN Category' Domain along with  'Unassigned' areas (GAP Status Code 4).  In addition, a few areas are included as 'Not Reported', these areas meet the definition of IUCN protection (i.e. GAP Status Code 1 or 2) but 'IUCN Category' has not yet been assigned and categorical assignment is not appropriate.  See the PAD-US Standards Manual for a summary of methods.
+        Attribute_Definition_Source: See PAD-US Data Manual Document available at https://www.usgs.gov/core-science-systems/science-analytics-and-synthesis/gap/pad-us-data-manual
+
+
+```{r  echo=FALSE}
+PA.by.IUCN <- PA.data %>% select( GIS_Acres, d_IUCN_Cat) %>% 
+  group_by( d_IUCN_Cat) %>% 
+  summarise(n=n(), 
+          acres = sum(as.numeric(as.character(GIS_Acres)), na.rm=TRUE))
+
+
+ggplot(PA.by.IUCN, aes(x = d_IUCN_Cat, acres))+
+  geom_bar(stat = "identity", position = "dodge")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom")+ xlab("IUCN Category")
+
+
+
+
+PA.by.IUCN_GAP_Own <- PA.data %>% select(Own_Type, GAP_Sts, d_GAP_Sts, GIS_Acres, d_IUCN_Cat) %>% 
+  group_by(Own_Type, GAP_Sts, d_GAP_Sts, d_IUCN_Cat) %>% 
+  summarise(n=n(), 
+            acres = sum(as.numeric(as.character(GIS_Acres)), na.rm=TRUE))
+
+
+```
+
+*Management Intent Status*
+
+What are the broad management goals in terms of biodiversity protection & disturbance regime?
+
+The 'GAP Status Code' is a measure of management intent to conserve biodiversity defined as: 
+
+    'GAP Status Code 1': An area having permanent protection from conversion of natural land cover and a mandated management plan in operation to maintain a natural state within which disturbance events (of natural type, frequency, intensity, and legacy) are permitted to proceed without interference or are mimicked through management. 
+
+    'GAP Status Code 2': An area having permanent protection from conversion of natural land cover and a mandated management plan in operation to maintain a primarily natural state, but which may receive uses or management practices that degrade the quality of existing natural communities, including suppression of natural disturbance. 
+
+    'GAP Status Code 3': An area having permanent protection from conversion of natural land cover for most of the area, but subject to extractive uses of either a broad, low-intensity type (e.g., logging, Off Highway Vehicle recreation) or localized intense type (e.g., mining).  It also confers protection to Federally listed endangered and threatened species throughout the area. 
+
+    'GAP Status Code 4': There are no known public or private institutional mandates or legally recognized easements or deed restrictions held by the managing entity to prevent conversion of natural habitat types to anthropogenic habitat types.  The area generally allows conversion to unnatural land cover throughout or management intent is unknown.  See the PAD-US Standards Manual for a summary of methods or the geodatabase look up table for short descriptions.
+    
+```{r  echo=FALSE}
+
+PA.by.GAP <- PA.data %>% select( GAP_Sts, d_GAP_Sts, GIS_Acres) %>% 
+  group_by( GAP_Sts, d_GAP_Sts) %>% 
+  summarise(n=n(), 
+          acres = sum(as.numeric(as.character(GIS_Acres)), na.rm=TRUE))
+
+GAP.names <- data.frame(GAP_Sts = c(1, 2, 3, 4),
+           GAP.name = c("Biodiversity Mgmt + \n Disturbance management", "Biodiversity Mgmt + \n Disturbance suppressed", "multiple uses, extractive + \n OHV use", "no mandate for protection"))
+
+PA.by.GAP<- merge(GAP.names, PA.by.GAP, by = "GAP_Sts")
+
+ggplot(PA.by.GAP, aes(x = GAP.name, acres, fill= GAP.name))+
+  geom_bar(stat = "identity", position = "dodge")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")+ xlab("GAP Status")
+
+```
+
+Looks like most of the land is managed for biodiversity, but disturbances are suppressed.
+
+
+```{r  echo=FALSE}
+PA.by.own_GAP <- PA.data %>% select(Own_Type, GAP_Sts, d_GAP_Sts, GIS_Acres, d_IUCN_Cat) %>% 
+  group_by(Own_Type, GAP_Sts, d_GAP_Sts, d_IUCN_Cat) %>% 
+  summarise(n=n(), 
+          acres = sum(as.numeric(as.character(GIS_Acres)), na.rm=TRUE))
+
+GAP.names <- data.frame(GAP_Sts = c(1, 2, 3, 4),
+           GAP.name = c("Biodiversity Mgmt + \n Disturbance management", "Biodiversity Mgmt + \n Disturbance suppressed", "multiple uses, extractive + \n OHV use", "no mandate for protection"))
+
+PA.by.own.GAP <- merge(GAP.names, PA.by.own_GAP, by = "GAP_Sts")
+
+ggplot(PA.by.own.GAP, aes(x = Own_Type,acres, fill= d_GAP_Sts, group = GAP_Sts))+
+  geom_bar(stat = "identity", position = "dodge")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom", legend.direction = "vertical", legend.title = element_blank())+ xlab("IUCN Category")
+```
