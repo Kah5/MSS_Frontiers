@@ -8,7 +8,7 @@ library(foreign)
 
 states <-readOGR("data/PADUS1_4MWest_Shapefile/tl_2014_us_state_AlbersUSGS.shp")
 protected.areas <-readOGR("data/PADUS1_4MWest_Shapefile/PADUS1_4Fee_Easements_MWest.shp")
-protected.areas <-readOGR("data/PADUS1_4MWest_Shapefile/")
+protected.areas <-readOGR("data/PADUS2_0_DOIRegion3_Shapefile/PADUS2_0Fee_DOIRegion3.shp")
 
 
 # lots of DBF's
@@ -20,15 +20,57 @@ mpa.dbf<- read.dbf("data/PADUS1_4MWest_Shapefile/PADUS1_4MPA.dbf")
 iucn.dbf<- read.dbf("data/PADUS1_4MWest_Shapefile/IUCN_Cat.dbf")
 access.dbf<- read.dbf("data/PADUS1_4MWest_Shapefile/Access.dbf")
 state.dbf<- read.dbf("data/PADUS1_4MWest_Shapefile/State_Nm.dbf")
+type.dbf <- read.dbf("data/PADUS1_4MWest_Shapefile/Category.dbf")
+type.dbf <- read.dbf("data/PADUS1_4MWest_Shapefile/IUCN_Cat.dbf")
+access.dbf <- read.dbf("data/PADUS1_4MWest_Shapefile/Access.dbf")
 # calculate the areas in different types of land protection status
 
 
 
-protected.areas$area <- st_area(f)
+#protected.areas$area <- st_area(protected.areas)
+
+# proctected areas:
+
+PA.data <- protected.areas@data
+
+PA.by.IUCN_GAP <- PA.data %>% select( GAP_Sts, d_GAP_Sts, GIS_Acres, d_IUCN_Cat) %>% 
+  group_by( GAP_Sts, d_GAP_Sts, d_IUCN_Cat) %>% 
+  summarise(n=n(), 
+          acres = sum(as.numeric(as.character(GIS_Acres)), na.rm=TRUE))
+
+
+ggplot(PA.by.IUCN_GAP, aes(x = d_IUCN_Cat, acres, fill= GAP_Sts, group = GAP_Sts))+
+  geom_bar(stat = "identity", position = "dodge")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1))+ ylab()
+
+# notes about IUCN categories:
+# International Union for the Conservation of Nature (IUCN) management categories assigned to protected areas for inclusion in the United Nations Environment World Conservation Monitoring Center (WCMC) World Database for Protected Areas (WDPA) and the Commission for Environmental Cooperation (CEC) North American Terrestrial Protected Areas Database.  IUCN defines a protected area as, "A clearly defined geographical space, recognized, dedicated and managed, through legal or other effective means, to achieve the long-term conservation of nature with associated ecosystem services and cultural values" (includes GAP Status Code 1 and 2 only).  Categorization follows as: 
+#   
+#   'IUCN Category Ia': Strict Nature Reserves are strictly protected areas set aside to protect biodiversity and possibly geological or geomorphological features, where human visitation, use and impacts are strictly controlled and limited to ensure preservation of the conservation values.  Such protected areas can serve as indispensable reference areas for scientific research and monitoring.  
+# 
+# 'IUCN Category Ib': Wilderness Areas are protected areas are usually large unmodified or slightly modified areas, retaining their natural character and influence, without permanent or significant human habitation, which are protected and managed to preserve their natural condition.  
+# 
+# 'IUCN Category II': National Park protected areas are large natural or near natural areas set aside to protect large-scale ecological processes, along with the complement of species and ecosystems characteristic of the area, which also provide a foundation for environmentally and culturally compatible spiritual, scientific, educational, recreational and visitor opportunities.  
+# 
+# 'IUCN Category III': Natural Monument or Feature protected areas are set aside to protect a specific natural monument, which can be a landform, sea mount, submarine caverns, geological feature such as caves, or even a living feature such as an ancient grove.  They are generally quite small protected areas and often have high visitor value.  
+# 
+# 'IUCN Category IV': Habitat and (or) species management protected areas aim to protect particular species or habitats and management reflects this priority.  Many category IV protected areas will need regular, active interventions to address the requirements of particular species or to maintain habitats, but this is not a requirement of this category.  
+# 
+# 'IUCN Category V': Protected landscape and (or) seascape protected areas occur where the interaction of people and nature over time has produced an area of distinct character with significant ecological, biological, cultural, and scenic value.  
+# 
+# 'IUCN Category VI': Protected area with sustainable use (community based, non-industrial) of natural resources are generally large, with much of the area in a more-or-less natural condition and whereas a proportion is under sustainable natural resource management and where such exploitation is seen as one of the main aims of the area.  
+# 
+# 'Other Conservation Areas' are not recognized by IUCN at this time; however, they are included in the CEC's database referenced above.  These areas (includes GAP Status Code 3 areas only) are attributed in the 'IUCN Category' Domain along with  'Unassigned' areas (GAP Status Code 4).  In addition, a few areas are included as 'Not Reported', these areas meet the definition of IUCN protection (i.e. GAP Status Code 1 or 2) but 'IUCN Category' has not yet been assigned and categorical assignment is not appropriate.  See the PAD-US Standards Manual for a summary of methods.
+#         Attribute_Definition_Source: See PAD-US Data Manual Document available at https://www.usgs.gov/core-science-systems/science-analytics-and-synthesis/gap/pad-us-data-manual
 
 
 
-# total us protexted areas cover 14% of teh US...if this number is the same for 
+PA.by.IUCN_GAP_Own <- PA.data %>% select(Own_Type, GAP_Sts, d_GAP_Sts, GIS_Acres, d_IUCN_Cat) %>% 
+  group_by(Own_Type, GAP_Sts, d_GAP_Sts, d_IUCN_Cat) %>% 
+  summarise(n=n(), 
+            acres = sum(as.numeric(as.character(GIS_Acres)), na.rm=TRUE))
+
+
+# total us protexted areas cover 14% of teh US...if this number is the same for the midwest then...
 
 # read in the pls and fia data:
 library(ggplot2)

@@ -106,13 +106,13 @@ What are the broad management goals in terms of biodiversity protection & distur
 
 The 'GAP Status Code' is a measure of management intent to conserve biodiversity defined as: 
 
-    'GAP Status Code 1': An area having permanent protection from conversion of natural land cover and a mandated management plan in operation to maintain a natural state within which disturbance events (of natural type, frequency, intensity, and legacy) are permitted to proceed without interference or are mimicked through management. 
+'GAP Status Code 1': An area having permanent protection from conversion of natural land cover and a mandated management plan in operation to maintain a natural state within which disturbance events (of natural type, frequency, intensity, and legacy) are permitted to proceed without interference or are mimicked through management. 
 
-    'GAP Status Code 2': An area having permanent protection from conversion of natural land cover and a mandated management plan in operation to maintain a primarily natural state, but which may receive uses or management practices that degrade the quality of existing natural communities, including suppression of natural disturbance. 
+'GAP Status Code 2': An area having permanent protection from conversion of natural land cover and a mandated management plan in operation to maintain a primarily natural state, but which may receive uses or management practices that degrade the quality of existing natural communities, including suppression of natural disturbance. 
 
-    'GAP Status Code 3': An area having permanent protection from conversion of natural land cover for most of the area, but subject to extractive uses of either a broad, low-intensity type (e.g., logging, Off Highway Vehicle recreation) or localized intense type (e.g., mining).  It also confers protection to Federally listed endangered and threatened species throughout the area. 
+'GAP Status Code 3': An area having permanent protection from conversion of natural land cover for most of the area, but subject to extractive uses of either a broad, low-intensity type (e.g., logging, Off Highway Vehicle recreation) or localized intense type (e.g., mining).  It also confers protection to Federally listed endangered and threatened species throughout the area. 
 
-    'GAP Status Code 4': There are no known public or private institutional mandates or legally recognized easements or deed restrictions held by the managing entity to prevent conversion of natural habitat types to anthropogenic habitat types.  The area generally allows conversion to unnatural land cover throughout or management intent is unknown.  See the PAD-US Standards Manual for a summary of methods or the geodatabase look up table for short descriptions.
+'GAP Status Code 4': There are no known public or private institutional mandates or legally recognized easements or deed restrictions held by the managing entity to prevent conversion of natural habitat types to anthropogenic habitat types.  The area generally allows conversion to unnatural land cover throughout or management intent is unknown.  See the PAD-US Standards Manual for a summary of methods or the geodatabase look up table for short descriptions.
     
 ```{r  echo=FALSE}
 
