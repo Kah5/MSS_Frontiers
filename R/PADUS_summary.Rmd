@@ -41,10 +41,15 @@ The States own most of the Protected areas (State DNRs), followed closely by Fed
 
 
 ```{r  echo=FALSE}
-PA.by.own <- PA.data %>% select(Own_Type, GIS_Acres, d_IUCN_Cat) %>% 
+PA.data$GIS_Acres_numeric <- as.numeric(as.character(PA.data$GIS_Acres))
+PA.data$GIS_sq_km <- as.numeric(as.character(PA.data$GIS_Acres))/247.105
+
+
+PA.by.own <- PA.data %>% select(Own_Type, GIS_Acres, GIS_sq_km,d_IUCN_Cat) %>% 
   group_by( Own_Type,  d_IUCN_Cat) %>% 
   summarise(n=n(), 
-          acres = sum(as.numeric(as.character(GIS_Acres)), na.rm=TRUE))
+          acres = sum(as.numeric(as.character(GIS_Acres)), na.rm=TRUE),
+          sq_km = sum(GIS_sq_km, na.rm=TRUE))
 
 Own.table <- data.frame(Own_Type = c("DESG", "DIST", "FED", "JNT", "LOC", "NGO","PVT", "STAT", "TERR", "TRIB", "UNK"),
                         Ownership = c("Designation","Regional Agency Special District","Federal","Joint","Local Government","Non-Governmental Organization","Private","State","Territorial","American Indian Lands","Unknown"
@@ -52,9 +57,9 @@ Own.table <- data.frame(Own_Type = c("DESG", "DIST", "FED", "JNT", "LOC", "NGO",
 
 PA.by.own <- merge(PA.by.own, Own.table, by = "Own_Type")
 
-ggplot(PA.by.own, aes(x = Ownership, acres))+
-  geom_bar(stat = "identity", position = "dodge")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom", panel.grid = element_blank())+ xlab("Ownership")+ylab("Acres")
-
+sq_km_bar<- ggplot(PA.by.own, aes(x = Ownership, sq_km))+
+  geom_bar(stat = "identity", position = "dodge")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom", panel.grid = element_blank())+ xlab("Ownership")+ylab("Square Kilometers")
+sq_km_bar
 ```
 
 ## *Summaries by the Management IUCN categories*
@@ -80,14 +85,17 @@ International Union for the Conservation of Nature (IUCN) management categories 
 
 
 ```{r  echo=FALSE}
-PA.by.IUCN <- PA.data %>% select( GIS_Acres, d_IUCN_Cat) %>% 
+PA.data$GIS_Acres_numeric <- as.numeric(as.character(PA.data$GIS_Acres))
+PA.data$GIS_sq_km <- as.numeric(as.character(PA.data$GIS_Acres))/247.105
+
+PA.by.IUCN <- PA.data %>% select( GIS_sq_km, d_IUCN_Cat) %>% 
   group_by( d_IUCN_Cat) %>% 
   summarise(n=n(), 
-          acres = sum(as.numeric(as.character(GIS_Acres)), na.rm=TRUE))
+          sq_km = sum(GIS_sq_km, na.rm=TRUE))
 
 
-ggplot(PA.by.IUCN, aes(x = d_IUCN_Cat, acres))+
-  geom_bar(stat = "identity", position = "dodge")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom")+ xlab("IUCN Category")
+ggplot(PA.by.IUCN, aes(x = d_IUCN_Cat, sq_km))+
+  geom_bar(stat = "identity", position = "dodge")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom")+ xlab("IUCN Category")+ylab("Square Kilometers")
 
 
 
@@ -147,4 +155,25 @@ PA.by.own.GAP <- merge(GAP.names, PA.by.own_GAP, by = "GAP_Sts")
 
 ggplot(PA.by.own.GAP, aes(x = Own_Type,acres, fill= d_GAP_Sts, group = GAP_Sts))+
   geom_bar(stat = "identity", position = "dodge")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom", legend.direction = "vertical", legend.title = element_blank())+ xlab("IUCN Category")
+```
+
+### Histogram of PADUS plot size
+```{r  echo=FALSE}
+
+PA.data$GIS_Acres_numeric <- as.numeric(as.character(PA.data$GIS_Acres))
+PA.data$GIS_sq_km <- as.numeric(as.character(PA.data$GIS_Acres))/247.105
+
+
+log.pa.data.sq.km <- ggplot(PA.data, aes(GIS_sq_km))+geom_histogram()+xlab("Square kilometers \n (note log scale)")+ylab("Number of managment units")+theme_bw()+ scale_x_log10(breaks=c(0.01, 0.1,1,10,100,1000))
+
+
+# summarise the total # of 
+```
+
+```{r  echo=FALSE}
+
+# create a figure 
+png(height = 8, width = 4, res = 300, units = "in", "outputs/3panel_PADUS_figure_side2.png")
+cowplot::plot_grid(map, log.pa.data.sq.km, sq_km_bar, align = "h", ncol = 1) 
+dev.off()
 ```
